@@ -6,17 +6,15 @@ import java.util.Arrays;
 import java.util.List;
 
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Paint;
 import android.hardware.Camera;
 import android.hardware.Camera.Size;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+
+import com.rniemo.mobile.android.sudosolvethis.DrawListener;
 
 public class CamPreview extends SurfaceView implements SurfaceHolder.Callback, Camera.PreviewCallback{
 	
@@ -27,6 +25,7 @@ public class CamPreview extends SurfaceView implements SurfaceHolder.Callback, C
 	private Size previewSize;
 	private int bitsPerPixel;
 	private List<CameraListener> camListeners = new ArrayList<CameraListener>();
+	private List<DrawListener> drawListeners = new ArrayList<DrawListener>();
 	
 	public CamPreview(Context context) {
 		super(context);
@@ -53,6 +52,14 @@ public class CamPreview extends SurfaceView implements SurfaceHolder.Callback, C
 	
 	public boolean removeCameraListener(CameraListener listener){
 		return camListeners.remove(listener);
+	}	
+	
+	public boolean addDrawListener(DrawListener listener){
+		return drawListeners.add(listener);
+	}
+	
+	public boolean removeDrawListener(DrawListener listener){
+		return drawListeners.remove(listener);
 	}
 	
 	public int getPreviewWidth(){
@@ -129,40 +136,36 @@ public class CamPreview extends SurfaceView implements SurfaceHolder.Callback, C
     @Override
 	public void onPreviewFrame(byte[] data, Camera camera) {
 
-//	    Camera.Parameters parameters = cam.getParameters();
-//	    bitsPerPixel = ImageFormat.getBitsPerPixel(parameters.getPictureFormat());
-//	    Log.e(LOG_TAG, "frmt: " + parameters.getPictureFormat());
     	//Bitmap.createBitmap(pixels, width, height, Bitmap.Config.ARGB_8888);
     	Size prevSize = camera.getParameters().getPreviewSize();
+    	// grayscale image
     	byte[] img = Arrays.copyOfRange(data, 0, prevSize.width * prevSize.height);
-    	
 		for(CameraListener listener : camListeners){
-			listener.onFrameReceived(data);
+			listener.onFrameReceived(img, prevSize.width, prevSize.height);
 		}
 		invalidate();
 		
 	}
     
-    public int[] yuvToGrayscale(byte[] yuv, int width, int height) {
-
-        int[] img = new int[width * height];
-
-        for (int i = 0; i < width * height; i++) {
-            int gray = yuv[i];
-            img[i] = 0xFF000000 | (gray * 0x00010101);
-        }
-
-        return img;
-
-      }
+//    public int[] yuvToGrayscale(byte[] yuv, int width, int height) {
+//
+//        int[] img = new int[width * height];
+//
+//        for (int i = 0; i < width * height; i++) {
+//            int gray = yuv[i];
+//            img[i] = 0xFF000000 | (gray * 0x00010101);
+//        }
+//
+//        return img;
+//
+//      }
     
     @Override
     public void onDraw(Canvas canvas){
     	super.onDraw(canvas);
-    	// draw things here
-//    	Paint paint = new Paint();
-//    	paint.setColor(Color.parseColor("#FFFFFFFF"));
-//    	canvas.drawRect(0, 0, 200, 200, paint);
+    	for(DrawListener listener : drawListeners){
+    		listener.draw(canvas);
+    	}
     }
 
 	@Override

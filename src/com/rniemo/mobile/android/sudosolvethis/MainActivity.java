@@ -1,24 +1,23 @@
 package com.rniemo.mobile.android.sudosolvethis;
 
 import android.app.Activity;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.widget.RelativeLayout;
 
 import com.rniemo.mobile.android.sudosolvethis.camera.CamPreview;
 import com.rniemo.mobile.android.sudosolvethis.camera.CameraListener;
-import com.rniemo.mobile.android.sudosolvethis.cv.HarrisDetector;
+import com.rniemo.mobile.android.sudosolvethis.cv.CornerDetector;
+import com.rniemo.mobile.android.sudosolvethis.cv.CornerDetector.CornerDetectionMethod;
 
 
-public class MainActivity extends Activity implements CameraListener  {
+public class MainActivity extends Activity implements CameraListener, DrawListener  {
 	
 	private final static String LOG_TAG = MainActivity.class.getSimpleName();
 	
 	private CamPreview camPreview;
-	private HarrisDetector hdetector;
+	private CornerDetector cornerDetector;
 	
 	
 
@@ -30,14 +29,21 @@ public class MainActivity extends Activity implements CameraListener  {
         setContentView(contentView);
         camPreview = (CamPreview) contentView.findViewById(R.id.cam_preview);
         camPreview.addCameraListener(this);
-        hdetector = new HarrisDetector();
+        camPreview.addDrawListener(this);
+        CornerDetector cornerDetector = new CornerDetector.CornerDetectorBuilder()
+        					.detectionMethod(CornerDetectionMethod.HARRIS)
+        					.gaussDerivativeSigma(1.0)
+        					.gaussWindowSigma(.7)
+        					.nonMaxSuppression(true)
+        					.build();
     }
     
-    public void onFrameReceived(byte[] data){
-//	    Bitmap map = BitmapFactory.decodeByteArray(data, 0, data.length);
-//	    int[] pixels = new int[50];
-//	    map.setPixels(pixels, 0, camPreview.getPreviewWidth(), 0, 0, 50, 50);
-//	    map.compress(format, quality, stream)
+    public void onFrameReceived(byte[] data, int width, int height){
+    	// process frame
 	}
+    
+    public void draw(Canvas canvas){
+    	// draw things
+    }
     
 }
