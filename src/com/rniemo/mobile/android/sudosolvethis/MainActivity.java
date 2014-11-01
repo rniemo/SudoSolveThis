@@ -9,6 +9,7 @@ import android.widget.RelativeLayout;
 import com.rniemo.mobile.android.sudosolvethis.camera.CamPreview;
 import com.rniemo.mobile.android.sudosolvethis.camera.CameraListener;
 import com.rniemo.mobile.android.sudosolvethis.cv.CornerDetector;
+import com.rniemo.mobile.android.sudosolvethis.cv.FilterUtils;
 import com.rniemo.mobile.android.sudosolvethis.cv.CornerDetector.CornerDetectionMethod;
 
 

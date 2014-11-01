@@ -1,5 +1,7 @@
 package com.rniemo.mobile.android.sudosolvethis.cv;
 
+import java.util.List;
+
 
 public class CornerDetector{
 	
@@ -13,12 +15,32 @@ public class CornerDetector{
 	private double gaussWindowSigma;
 	private double gaussDerivativeSigma;
 	private CornerDetectionMethod method;
-
+	
+	private double[][] gaussSmooth;
+	private double[][] gaussXDeriv;
+	private double[][] gaussYDeriv;
+			
+			
 	private CornerDetector(CornerDetectorBuilder builder){
 		this.nonMaxSuppression = builder.nonMaxSuppression;
 		this.gaussWindowSigma = builder.gaussWindowSigma;
 		this.gaussDerivativeSigma = builder.gaussDerivativeSigma;
 		this.method = builder.method;
+		gaussSmooth = FilterUtils.getGaussian(gaussWindowSigma);
+		gaussYDeriv = FilterUtils.getGaussianDeriv(gaussDerivativeSigma);
+		gaussXDeriv = MatrixUtils.transpose(gaussYDeriv);
+	}
+	
+	public List<Pixel> detectCorners(byte[] img){
+		
+		if(method == CornerDetectionMethod.HARRIS || method == CornerDetectionMethod.SHI_TOMASI){
+			
+		}else if(method == CornerDetectionMethod.FAST){
+			// TODO: implement FAST :)
+		}
+		
+		
+		return null;
 	}
 	
 	public static class CornerDetectorBuilder{
