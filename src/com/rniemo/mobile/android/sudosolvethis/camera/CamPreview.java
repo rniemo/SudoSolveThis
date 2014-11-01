@@ -2,36 +2,49 @@ package com.rniemo.mobile.android.sudosolvethis.camera;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
 import android.hardware.Camera;
 import android.hardware.Camera.Size;
+import android.util.AttributeSet;
 import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
-import android.view.ViewGroup;
 
-public class CamPreview extends ViewGroup implements SurfaceHolder.Callback, Camera.PreviewCallback{
+public class CamPreview extends SurfaceView implements SurfaceHolder.Callback, Camera.PreviewCallback{
 	
 	private final static String LOG_TAG = CamPreview.class.getSimpleName();
 	
 	private Camera cam;
-	private SurfaceView sview;
 	private SurfaceHolder sholder;
 	private Size previewSize;
+	private int bitsPerPixel;
 	private List<CameraListener> camListeners = new ArrayList<CameraListener>();
-	
 	
 	public CamPreview(Context context) {
 		super(context);
-		sview = new SurfaceView(context);
-        addView(sview);
+		init();
+	}
+	
+	public CamPreview(Context context, AttributeSet attrs) {
+		super(context, attrs);
+		init();
+	}
+	
+	public void init(){
 
         // Install a SurfaceHolder.Callback so we get notified when the
         // underlying surface is created and destroyed.
-        sholder = sview.getHolder();
-        sholder.addCallback(this);
+		setWillNotDraw(false);
+    	sholder = getHolder();
+    	sholder.addCallback(this);
 	}
 	
 	public boolean addCameraListener(CameraListener listener){
@@ -40,6 +53,18 @@ public class CamPreview extends ViewGroup implements SurfaceHolder.Callback, Cam
 	
 	public boolean removeCameraListener(CameraListener listener){
 		return camListeners.remove(listener);
+	}
+	
+	public int getPreviewWidth(){
+		return previewSize.width;
+	}
+	
+	public int getPreviewHeight(){
+		return previewSize.height;
+	}
+	
+	public int getBitsPerPixel(){
+		return bitsPerPixel;
 	}
 	
 	public boolean safeCameraOpen(int id) {
@@ -54,10 +79,6 @@ public class CamPreview extends ViewGroup implements SurfaceHolder.Callback, Cam
             e.printStackTrace();
         }
         
-        if(qOpened){
-        	setCamera(cam);
-        }
-        
         return qOpened;    
     }
     
@@ -70,19 +91,14 @@ public class CamPreview extends ViewGroup implements SurfaceHolder.Callback, Cam
     }
     
     public void setCamera(Camera camera) {
-        if (cam == camera) { return; }
-        
-        stopPreviewAndFreeCamera();
         
         cam = camera;
         
         if (cam != null) {
-            List<Size> localSizes = cam.getParameters().getSupportedPreviewSizes();
-            previewSize = localSizes.get(0);
-            requestLayout();
           
             try {
             	cam.setPreviewDisplay(sholder);
+                cam.setPreviewCallback(this);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -112,15 +128,48 @@ public class CamPreview extends ViewGroup implements SurfaceHolder.Callback, Cam
     
     @Override
 	public void onPreviewFrame(byte[] data, Camera camera) {
+
+//	    Camera.Parameters parameters = cam.getParameters();
+//	    bitsPerPixel = ImageFormat.getBitsPerPixel(parameters.getPictureFormat());
+//	    Log.e(LOG_TAG, "frmt: " + parameters.getPictureFormat());
+    	//Bitmap.createBitmap(pixels, width, height, Bitmap.Config.ARGB_8888);
+    	Size prevSize = camera.getParameters().getPreviewSize();
+    	byte[] img = Arrays.copyOfRange(data, 0, prevSize.width * prevSize.height);
+    	
 		for(CameraListener listener : camListeners){
 			listener.onFrameReceived(data);
 		}
+		invalidate();
+		
 	}
+    
+    public int[] yuvToGrayscale(byte[] yuv, int width, int height) {
+
+        int[] img = new int[width * height];
+
+        for (int i = 0; i < width * height; i++) {
+            int gray = yuv[i];
+            img[i] = 0xFF000000 | (gray * 0x00010101);
+        }
+
+        return img;
+
+      }
+    
+    @Override
+    public void onDraw(Canvas canvas){
+    	super.onDraw(canvas);
+    	// draw things here
+//    	Paint paint = new Paint();
+//    	paint.setColor(Color.parseColor("#FFFFFFFF"));
+//    	canvas.drawRect(0, 0, 200, 200, paint);
+    }
 
 	@Override
-	public void surfaceChanged(SurfaceHolder arg0, int arg1, int arg2, int arg3) {
+	public void surfaceChanged(SurfaceHolder holder, int arg1, int arg2, int arg3) {
 		// Now that the size is known, set up the camera parameters and begin
 	    // the preview.
+		sholder = holder;
 	    Camera.Parameters parameters = cam.getParameters();
 	    parameters.setPreviewSize(previewSize.width, previewSize.height);
 	    requestLayout();
@@ -132,8 +181,21 @@ public class CamPreview extends ViewGroup implements SurfaceHolder.Callback, Cam
 	}
 
 	@Override
-	public void surfaceCreated(SurfaceHolder arg0) {
-		// TODO Auto-generated method stub
+	public void surfaceCreated(SurfaceHolder holder) {
+		Log.e(LOG_TAG, "surface created");
+		sholder = holder;
+		try {
+			boolean open = safeCameraOpen(Camera.CameraInfo.CAMERA_FACING_BACK);
+			if(open){
+	            previewSize = cam.getParameters().getPreviewSize();
+	            cam.setDisplayOrientation(90);
+	            requestLayout();
+        		cam.setPreviewDisplay(sholder);
+            	cam.setPreviewCallback(this);
+			}
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 		
 	}
 
