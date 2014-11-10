@@ -1,5 +1,6 @@
 package com.rniemo.mobile.android.sudosolvethis.cv;
 
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -31,9 +32,18 @@ public class CornerDetector{
 		gaussXDeriv = MatrixUtils.transpose(gaussYDeriv);
 	}
 	
-	public List<Pixel> detectCorners(byte[] img){
-		
+	
+	public List<Pixel> detectCorners(double[][] img){
+		List<Pixel> corners = new ArrayList<Pixel>();
 		if(method == CornerDetectionMethod.HARRIS || method == CornerDetectionMethod.SHI_TOMASI){
+			double[][] xImg = FilterUtils.filter(img, gaussXDeriv);
+			double[][] yImg = FilterUtils.filter(img, gaussYDeriv);
+			double[][] R = new double[img.length][img[0].length];
+			for(int row = 0; row < R.length; row++){
+				for(int col = 0; col < R[0].length; col++){
+					
+				}
+			}
 			
 		}else if(method == CornerDetectionMethod.FAST){
 			// TODO: implement FAST :)
@@ -41,6 +51,14 @@ public class CornerDetector{
 		
 		
 		return null;
+	}
+	
+	private double harrisCornerness(double[][] M){
+		return 0;
+	}
+	
+	private double shiTomasiCornerness(double[][] M){
+		return 0;
 	}
 	
 	public static class CornerDetectorBuilder{
