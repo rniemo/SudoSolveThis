@@ -38,10 +38,21 @@ public class CornerDetector{
 		if(method == CornerDetectionMethod.HARRIS || method == CornerDetectionMethod.SHI_TOMASI){
 			double[][] xImg = FilterUtils.filter(img, gaussXDeriv);
 			double[][] yImg = FilterUtils.filter(img, gaussYDeriv);
+			double[][] xyImg = MatrixUtils.mult(xImg, yImg);
+			// gaussian blur xImg, yImg, xyImg
 			double[][] R = new double[img.length][img[0].length];
+			double[][] M = new double[2][2];
 			for(int row = 0; row < R.length; row++){
 				for(int col = 0; col < R[0].length; col++){
-					
+					M[0][0] = Math.pow(xImg[row][col], 2);
+					M[0][1] = xyImg[row][col];
+					M[1][0] = M[0][1];
+					M[1][1] = Math.pow(yImg[row][col], 2);
+					if(method == CornerDetectionMethod.HARRIS){
+						R[row][col] = harrisCornerness(M);
+					}else{
+						R[row][col] = shiTomasiCornerness(M);
+					}
 				}
 			}
 			
@@ -50,15 +61,25 @@ public class CornerDetector{
 		}
 		
 		
-		return null;
+		return corners;
 	}
 	
 	private double harrisCornerness(double[][] M){
-		return 0;
+		double x = M[0][0];
+		double xy = M[1][0];
+		double y = M[1][1];
+		// Determinant - alpha * (trace)^2
+		// if two eigenvalues are strong, result is nonzero
+		// if 1-2 eigenvalues are small, determinant ~= 0, result is ~zero
+		return x * y - xy * xy - .05 * (x + y) * (x + y);
 	}
 	
 	private double shiTomasiCornerness(double[][] M){
-		return 0;
+		double x = M[0][0];
+		double xy = M[1][0];
+		double y = M[1][1];
+		// compute smallest eigenvalue
+		return ((x + y) - Math.sqrt((x - y) * (x - y) + 4 * xy * xy)) / 2;
 	}
 	
 	public static class CornerDetectorBuilder{

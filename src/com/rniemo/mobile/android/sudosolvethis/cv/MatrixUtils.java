@@ -12,6 +12,20 @@ public class MatrixUtils {
         return temp;
 	}
 	
+    public static double[][] mult(double[][] m, double[][] n) {
+        int mrows = m.length;
+        int mcols = m[0].length;
+        int ncols = m[0].length;
+        double[][] ret = new double[mrows][ncols];
+        for (int i = 0; i < mrows; i++){
+            for (int j = 0; j < ncols; j++){
+                for (int k = 0; k < mcols; k++){
+                    ret[i][j] += m[i][k] * n[k][j];
+                }
+            }
+        }
+        return ret;
+    }
 	public static void printMatrix(double[][] mat){
 		double sum = 0;
 		for(int x = 0; x < mat.length; x++){
